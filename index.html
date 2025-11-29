@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Manager Simulator</title>
+    <style>
+        /* ################################################################## */
+        /* ############### PHẦN CSS (Dark Mode & Layout) ################## */
+        /* ################################################################## */
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+            padding: 20px;
+        }
+        
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        h1, h2, h3 {
+            color: #007bff;
+        }
+        
+        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
+            color: #4dc4ff;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+
+        .main-content {
+            flex: 2;
+        }
+
+        .sidebar {
+            flex: 1;
+        }
+
+        .control-panel, .race-results, .standings-section, .news-section, .transfer-section {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        body.dark-mode .control-panel, 
+        body.dark-mode .race-results, 
+        body.dark-mode .standings-section, 
+        body.dark-mode .news-section,
+        body.dark-mode .transfer-section {
+            background-color: #1e1e1e;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+        }
+
+        #runRaceButton {
+            background-color: #28a745;
+            color: white;
+        }
+        #runRaceButton:hover {
+            background-color: #218838;
+        }
+        
+        button[onclick^="simulate100Years"] {
+            background-color: #f7a000;
+            color: #333;
+        }
+        button[onclick^="simulate100Years"]:hover {
+            background-color: #e69500;
+        }
+
+        #languageToggle {
+             background-color: #00bcd4;
+             color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        body.dark-mode th, body.dark-mode td {
+            border: 1px solid #333;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        
+        body.dark-mode th {
+            background-color: #333;
+            color: #ccc;
+        }
+        
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        body.dark-mode pre {
+            background-color: #252525;
+            color: #bbb;
+        }
+
+        .fastest-lap {
+            color: red;
+            font-weight: bold;
+        }
+
+        .season-complete {
+            color: purple;
+        }
+
+        /* News list style */
+        #newsList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #newsList li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+        
+        body.dark-mode #newsList li {
+            border-bottom: 1px dotted #444;
+        }
+        
+        /* Transfer Window Specific */
+        #transferWindow {
+            border: 2px solid purple;
+        }
+        
+        #transferTable th, #transferTable td {
+            text-align: center;
+        }
+        
+        #transferTable select {
+            padding: 5px;
+            border-radius: 4px;
+            width: 100%;
+            background-color: #fff;
+            color: #333;
+        }
+        
+        body.dark-mode #transferTable select {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        #transferTable select:disabled {
+            background-color: #eee;
+            color: #666;
+        }
+        
+        body.dark-mode #transferTable select:disabled {
+            background-color: #222;
+            color: #888;
+        }
+
+        .contract-info {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        body.dark-mode .contract-info {
+            color: #aaa;
+        }
+        
+        .driver-performance {
+             font-weight: bold;
+             color: #007bff;
+        }
+        
+        body.dark-mode .driver-performance {
+             color: #4dc4ff;
+        }
+
+        /* Rookie Form Styles */
+        .rookie-form {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #008cba;
+            border-radius: 5px;
+            background-color: #e6f7ff;
+        }
+        
+        body.dark-mode .rookie-form {
+            background-color: #333;
+            border-color: #4dc4ff;
+            color: #e0e0e0;
+        }
+
+        .rookie-form input[type="text"],
+        .rookie-form input[type="number"] {
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            width: 90%;
+            margin-bottom: 5px;
+            background-color: #fff;
+            color: #333;
+        }
+        
+        body.dark-mode .rookie-form input {
+            background-color: #222;
+            color: #eee;
+            border-color: #555;
+        }
+
+        .rookie-form button {
+            background-color: #007bff !important;
+            color: white !important;
+            width: 95%;
+            margin-top: 5px;
+        }
+        
+    </style>
+</head>
+<body class="dark-mode">
+
+    <header>
+        <h1 data-i18n="appTitle">🏎️ F1 Manager Simulator - Mùa Giải <span id="currentSeasonDisplay">2025</span></h1>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            
+            <div class="control-panel">
+                <div id="mainControls">
+                    <button id="runRaceButton" onclick="runNextRace()" data-i18n="btnRunRace">Chạy Chặng Đua Tiếp Theo</button>
+                    <button onclick="simulate100Years()" data-i18n="btnSim100">Simulate Nhanh 100 Năm (2025 - 2125)</button>
+                    <button onclick="toggleRaceHistory()" data-i18n="btnToggleHistory">Xem Lịch Sử Chặng Đua Mùa Hiện Tại</button>
+                    <button onclick="resetSeason()" style="background-color: red; color: white;" data-i18n="btnReset">RESET GAME</button>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button id="darkModeToggle" onclick="toggleDarkMode()" style="background-color: #343a40; color: white;" data-i18n="btnToggleDark">Toggle Light Mode</button>
+                    <button id="languageToggle" onclick="toggleLanguage()">Language: VI</button>
+                </div>
+            </div>
+
+            <div id="raceResult" class="race-results">
+                <h2 data-i18n="raceResultTitle">Kết Quả Chặng Đua Gần Nhất: <span id="currentRaceName">Chưa Bắt Đầu</span></h2>
+                <pre id="raceLog" data-i18n="raceLogInitial">Nhấn "Chạy Chặng Đua Tiếp Theo" để khởi động Mùa giải 2025!</pre>
+            </div>
+            
+            <div id="seasonHistory" class="race-results" style="display: none;">
+                <h2 data-i18n="historyTitle">Lịch Sử Các Chặng Đã Hoàn Thành</h2>
+            </div>
+            
+            <div id="championshipHistory" class="race-results" style="display: none;">
+                <h2 data-i18n="championshipTitle">🏆 Lịch Sử Vô Địch Thế Kỷ (2025 - 2125)</h2>
+            </div>
+            
+            <div id="transferWindow" class="transfer-section" style="display: none;">
+                <h2 data-i18n="transferTitle">📝 Giai Đoạn Chuyển Nhượng Mùa Giải <span id="transferSeasonYear">2025</span> sang <span id="nextSeasonYear">2026</span></h2>
+                
+                <div id="retirementInfo" style="color: red; font-weight: bold; margin-bottom: 10px; display: none;"></div>
+                <div id="prioritySigningInfo" style="color: gold; font-weight: bold; margin-bottom: 10px; display: none;"></div>
+                
+                <div id="rookieCreationForm" class="rookie-form">
+                    <h3 data-i18n="rookieFormTitle">🌟 Tạo Rookie Tùy Chỉnh</h3>
+                    <p data-i18n="rookieFormDesc">Bạn có thể tạo một tay đua trẻ tiềm năng để đưa vào thị trường Free Agent.</p>
+                    <label for="rookieName" data-i18n="rookieNameLabel">Tên (Tối đa 25 ký tự):</label><br>
+                    <input type="text" id="rookieName" maxlength="25" value="My New Rookie" style="width: 90%; margin-bottom: 5px;"><br>
+                    
+                    <label for="rookieNationality" data-i18n="rookieNationalityLabel">Quốc tịch:</label><br>
+                    <input type="text" id="rookieNationality" value="Viet Nam" style="width: 90%; margin-bottom: 5px;"><br>
+
+                    <label for="rookieAge" data-i18n="rookieAgeLabel">Tuổi (18-25):</label><br>
+                    <input type="number" id="rookieAge" min="18" max="25" value="20" style="width: 90%; margin-bottom: 5px;"><br>
+
+                    <label for="rookiePerf" data-i18n="rookiePerfLabel">Performance (0.60 - 1.00):</label><br>
+                    <input type="number" id="rookiePerf" min="0.60" max="1.00" step="0.01" value="0.75" style="width: 90%; margin-bottom: 10px;"><br>
+
+                    <button onclick="createCustomRookie()" data-i18n="rookieCreateBtn">Tạo & Thêm vào FA</button>
+                </div>
+                
+                <p id="freeAgentInfo" style="margin-top: 15px; border: 1px dashed #007bff; padding: 10px;"></p>
+                
+                <h3 data-i18n="transferRecruitmentTitle">Chiêu Mộ Tay Đua (Chỉ ký vào các Slot Hết Hạn HĐ)</h3>
+                <table id="transferTable">
+                    </table>
+                
+                <button onclick="randomizeTransfers()" style="background-color: #dc3545; color: white; margin-top: 15px;" data-i18n="btnRandomize">Ngẫu Nhiên Hợp Đồng</button>
+                <button onclick="applyTransfers()" style="background-color: #007bff; color: white; margin-top: 15px;" data-i18n="btnConfirmTransfer">Xác Nhận & Bắt Đầu Mùa <span id="nextSeasonYearConfirm">2026</span></button>
+            </div>
+
+            <div class="standings-section">
+                <h2 data-i18n="standingsTitle">Bảng Xếp Hạng Tay Đua Hiện Tại</h2>
+                <table id="driverStandings">
+                    <thead>
+                        <tr>
+                            <th data-i18n="standingsRank">Hạng</th>
+                            <th data-i18n="standingsDriver">Tay Đua</th>
+                            <th data-i18n="standingsTeam">Đội</th>
+                            <th data-i18n="standingsPoints">Điểm</th>
+                            <th data-i18n="standingsContract">Thời Hạn HĐ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <div class="sidebar">
+            
+            <div id="breakingNews" class="news-section">
+                <h2 data-i18n="newsTitle">Tin Nóng (Breaking News)</h2>
+                <ul id="newsList">
+                    <li>📰 Chào mừng đến với Mùa giải 2025!</li>
+                </ul>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        
+        let currentSeason = 2025;
+        let currentLanguage = 'VI'; // Ngôn ngữ mặc định
+        const FIA_POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+        const RACE_CALENDAR = [
+            "GP Bahrain", "GP Úc", "GP Nhật Bản", "GP Trung Quốc", "GP Monaco", "GP Canada", 
+            "GP Anh", "GP Bỉ", "GP Ý", "GP Singapore", "GP Abu Dhabi" 
+        ];
+        
+        const TOP_TEAMS = ["Red Bull Racing", "Ferrari", "Mercedes", "McLaren"];
+        
+        const INITIAL_DRIVERS_DATA = [
+            { name: "Max Verstappen", team: "Red Bull Racing", points: 0, performance: 0.98, age: 28, experience: 10, contractLength: 3, nationality: "Dutch" }, 
+            { name: "Yuki Tsunoda", team: "Red Bull Racing", points: 0, performance: 0.88, age: 25, experience: 4, contractLength: 1, nationality: "Japanese" }, 
+            { name: "Charles Leclerc", team: "Ferrari", points: 0, performance: 0.94, age: 27, experience: 7, contractLength: 3, nationality: "Monegasque" }, 
+            { name: "Lewis Hamilton", team: "Ferrari", points: 0, performance: 0.92, age: 40, experience: 19, contractLength: 3, nationality: "British" }, 
+            { name: "George Russell", team: "Mercedes", points: 0, performance: 0.90, age: 27, experience: 6, contractLength: 3, nationality: "British" }, 
+            { name: "Andrea Kimi Antonelli", team: "Mercedes", points: 0, performance: 0.85, age: 19, experience: 1, contractLength: 1, nationality: "Italian" }, 
+            { name: "Lando Norris", team: "McLaren", points: 0, performance: 0.93, age: 26, experience: 6, contractLength: 3, nationality: "British" }, 
+            { name: "Oscar Piastri", team: "McLaren", points: 0, performance: 0.89, age: 24, experience: 3, contractLength: 1, nationality: "Australian" },
+            { name: "Fernando Alonso", team: "Aston Martin", points: 0, performance: 0.87, age: 44, experience: 24, contractLength: 1, nationality: "Spanish" }, 
+            { name: "Lance Stroll", team: "Aston Martin", points: 0, performance: 0.80, age: 26, experience: 8, contractLength: 1, nationality: "Canadian" },
+            { name: "Liam Lawson", team: "RB", points: 0, performance: 0.82, age: 23, experience: 2, contractLength: 1, nationality: "New Zealander" },
+            { name: "Isack Hadjar", team: "RB", points: 0, performance: 0.78, age: 21, experience: 1, contractLength: 1, nationality: "French" }, 
+            { name: "Alexander Albon", team: "Williams", points: 0, performance: 0.75, age: 29, experience: 6, contractLength: 1, nationality: "Thai" },
+            { name: "Carlos Sainz", team: "Williams", points: 0, performance: 0.88, age: 31, experience: 11, contractLength: 1, nationality: "Spanish" }, 
+            { name: "Nico Hulkenberg", team: "Kick Sauber", points: 0, performance: 0.76, age: 38, experience: 14, contractLength: 1, nationality: "German" },
+            { name: "Gabriel Bortoleto", team: "Kick Sauber", points: 0, performance: 0.68, age: 22, experience: 1, contractLength: 1, nationality: "Brazilian" }, 
+            { name: "Pierre Gasly", team: "Alpine", points: 0, performance: 0.77, age: 29, experience: 8, contractLength: 1, nationality: "French" },
+            { name: "Franco Colapinto", team: "Alpine", points: 0, performance: 0.69, age: 22, experience: 1, contractLength: 1, nationality: "Argentinian" }, 
+            { name: "Oliver Bearman", team: "Haas", points: 0, performance: 0.74, age: 20, experience: 1, contractLength: 1, nationality: "British" },
+            { name: "Esteban Ocon", team: "Haas", points: 0, performance: 0.78, age: 29, experience: 7, contractLength: 1, nationality: "French" }, 
+        ];
+        
+        let AVAILABLE_ROOKIE_NAMES = [
+            "Zane Maloney", "Theo Pourchaire", "Paul Aron", "Kush Maini", "Jak Crawford", "Taylor Barnard", 
+            "Luke Browning", "Felipe Drugovich", "Dennis Hauger", "Robert Shwartzman", "Ayumu Iwasa", 
+            "Victor Martins", "Caio Collet", "Zhuo Zhou", "Hadrien David", "Jamie Chadwick", 
+            "Marcus Armstrong", "Arthur Leclerc", "Mick Schumacher", "Callum Ilott"
+        ];
+        let USED_ROOKIE_NAMES = []; 
+        
+        const FIRST_NAMES = [
+            "Alex", "Ben", "Charlie", "David", "Ethan", "Felix", "George", "Henry", "Ian", "Jack", 
+            "Kevin", "Leo", "Max", "Noah", "Oscar", "Paul", "Quinn", "Ryan", "Sam", "Tom", 
+            "Victor", "Will", "Xavier", "Yuri", "Zack", "Anna", "Bella", "Chloe", "Daisy", 
+            ""
+        ];
+        const LAST_NAMES = [
+            "Smith", "Jones", "Williams", "Brown", "Taylor", "Wilson", "Davis", "Evans", "Walker", 
+            "White", "Harris", "Clark", "Lewis", "Hall", "Allen", "Young", "King", "Wright", 
+            "Scott", "Green", "Adams", "Baker", "Carter", "Fisher", "Jackson", "Lee", "Mitchell", 
+            "Parker", "Ricci", "Perez", "Zhou", "Sargeant", "Latifi", "Vettel", "Button", "Rosberg",
+            "Mori", "Silva", "Kuznetsov", "Schmidt", "Dubois", "Al Khatib", "Garcia", "Kim"
+        ];
+
+        let drivers = initializeDrivers(); 
+        let currentRaceIndex = 0;
+        let seasonRaceHistory = []; 
+        let championshipHistory = []; 
+
+        // ################## TỪ ĐIỂN DỊCH THUẬT ##################
+
+        const DICTIONARY = {
+            VI: {
+                appTitle: "🏎️ F1 Manager Simulator - Mùa Giải",
+                btnRunRace: "Chạy Chặng Đua Tiếp Theo",
+                btnSim100: "Simulate Nhanh 100 Năm (2025 - 2125)",
+                btnToggleHistory: "Xem Lịch Sử Chặng Đua Mùa Hiện Tại",
+                btnReset: "RESET GAME",
+                btnToggleDark: "Toggle Light Mode",
+                raceResultTitle: "Kết Quả Chặng Đua Gần Nhất:",
+                raceLogInitial: 'Nhấn "Chạy Chặng Đua Tiếp Theo" để khởi động Mùa giải 2025!',
+                historyTitle: "Lịch Sử Các Chặng Đã Hoàn Thành",
+                championshipTitle: "🏆 Lịch Sử Vô Địch Thế Kỷ (2025 - 2125)",
+                transferTitle: "📝 Giai Đoạn Chuyển Nhượng Mùa Giải",
+                transferRecruitmentTitle: "Chiêu Mộ Tay Đua (Chỉ ký vào các Slot Hết Hạn HĐ)",
+                btnRandomize: "Ngẫu Nhiên Hợp Đồng",
+                btnConfirmTransfer: "Xác Nhận & Bắt Đầu Mùa",
+                standingsTitle: "Bảng Xếp Hạng Tay Đua Hiện Tại",
+                standingsRank: "Hạng",
+                standingsDriver: "Tay Đua",
+                standingsTeam: "Đội",
+                standingsPoints: "Điểm",
+                standingsContract: "Thời Hạn HĐ",
+                newsTitle: "Tin Nóng (Breaking News)",
+                rookieFormTitle: "🌟 Tạo Rookie Tùy Chỉnh",
+                rookieFormDesc: "Bạn có thể tạo một tay đua trẻ tiềm năng để đưa vào thị trường Free Agent.",
+                rookieNameLabel: "Tên (Tối đa 25 ký tự):",
+                rookieNationalityLabel: "Quốc tịch:",
+                rookieAgeLabel: "Tuổi (18-25):",
+                rookiePerfLabel: "Performance (0.60 - 1.00):",
+                rookieCreateBtn: "Tạo & Thêm vào FA",
+                transferButtonStart: "1. BẮT ĐẦU GIAI ĐOẠN CHIÊU MỘ & GIẢI NGHỆ",
+                transferButtonSkip: "2. Bỏ qua & Bắt đầu Mùa",
+                transferTableCurrentDriver: "Tay Đua Hiện Tại (HĐ)",
+                transferTableRecruit: "Chiêu Mộ Mới",
+                transferTableTeam: "Đội Đua",
+                transferTableSlot1: "Vị Trí 1",
+                transferTableSlot2: "Vị Trí 2",
+                transferTableHeader: "Tay Đua Hiện Tại (HĐ)",
+                transferTableHeaderNew: "Chiêu Mộ Mới",
+                seasonCompleteTitle: "🏁 Đã Hoàn Thành Mùa Giải",
+                seasonCompleteText: "Mùa giải tiếp theo là",
+                tableHeaderRaceName: "Chặng Đua",
+                tableHeaderWinner: "Người Chiến Thắng",
+                tableHeaderTeam: "Đội",
+                championshipHistoryWinner: "Nhà Vô Địch",
+                championshipHistoryTeam: "Đội Đua",
+                newsInitial: "Chào mừng đến với Mùa giải 2025!",
+                newsRookieSuccess: (name, perf) => `🎉 Tân binh **${name}** (P: ${perf}) đã được tạo và tham gia thị trường Free Agent!`,
+                newsRetirement: (names) => `🛑 **GIẢI NGHỆ:** ${names} đã chính thức treo mũ bảo hiểm sau mùa giải này.`,
+                newsPriority: (signers) => `💎 **SIÊU HỢP ĐỒNG:** Các tay đua Performance cao đã nhanh chóng được **TỰ ĐỘNG** ký hợp đồng 3 năm! (${signers})`,
+                newsExpired: (names) => `🔔 **HẾT HẠN HỢP ĐỒNG:** ${names} đã trở thành tay đua tự do (FA) và đang tìm kiếm bến đỗ mới.`,
+                newsHired: (name, team) => `🎉 **HOT DEAL:** Tay đua trẻ ${name} chính thức ký hợp đồng với ${team}! Tương lai tươi sáng?`,
+                newsRemovedFA: (names) => `🔥 **BỊ XÓA KHỎI GAME:** Các tay đua tự do **${names}** đã bị xóa khỏi game vì không tìm được hợp đồng trong hơn 3 năm.`,
+                transferErrorSlot: (driver, team) => `Lỗi chuyển nhượng: ${driver} đã được ký cho đội ${team}. Vui lòng sửa lại.`,
+                alertRookieExist: (name) => `Lỗi: Tay đua "${name}" đã tồn tại. Vui lòng chọn tên khác.`,
+                alertRookiePerf: "Lỗi: Performance (P) phải nằm trong khoảng từ 0.60 đến 1.00.",
+                alertRookieAge: "Lỗi: Tuổi phải nằm trong khoảng từ 18 đến 25.",
+                alertRookieName: "Lỗi: Vui lòng nhập Tên hợp lệ (dưới 25 ký tự).",
+                alertRookieAdded: (name) => `Tân binh "${name}" đã được thêm thành công vào danh sách Free Agent.`,
+                alertTransferConfirm: "✅ Bạn có chắc chắn muốn **Xác Nhận** các hợp đồng này và **Bắt Đầu Mùa Giải Mới** không?",
+                alertSim100Confirm: (start, end) => `⚠️ CẢNH BÁO: Bạn có chắc chắn muốn **Mô Phỏng Nhanh 100 Năm** từ ${start} đến ${end} không? Game sẽ tự động chuyển sang năm ${end+1} sau khi hoàn tất.`,
+                alertSim100Complete: (year) => `Đã mô phỏng thành công 100 năm. Game hiện ở Mùa Giải ${year}.`,
+                alertResetConfirm: "⚠️ CẢNH BÁO: Bạn có chắc chắn muốn thiết lập lại toàn bộ Game về Mùa Giải 2025 ban đầu không? Mọi tiến trình sẽ bị mất.",
+                alertResetComplete: "Game đã được thiết lập lại về Mùa Giải 2025 ban đầu.",
+                alertRandomizeComplete: 'Đã áp dụng ngẫu nhiên các hợp đồng chuyển nhượng. Bạn có thể chỉnh sửa các hợp đồng chưa khóa trước khi xác nhận!',
+                faYearsInfo: (years) => ` (FA: ${years}/3)`,
+                rookieDefaultName: "Tân Binh Của Tôi",
+                rookieDefaultNationality: "Việt Nam"
+            },
+            EN: {
+                appTitle: "🏎️ F1 Manager Simulator - Season",
+                btnRunRace: "Run Next Race",
+                btnSim100: "Quick Simulate 100 Years (2025 - 2125)",
+                btnToggleHistory: "View Current Season Race History",
+                btnReset: "RESET GAME",
+                btnToggleDark: "Toggle Dark Mode",
+                raceResultTitle: "Latest Race Result:",
+                raceLogInitial: 'Press "Run Next Race" to start the 2025 Season!',
+                historyTitle: "Completed Race History",
+                championshipTitle: "🏆 Century Championship History (2025 - 2125)",
+                transferTitle: "📝 Transfer Window: Season",
+                transferRecruitmentTitle: "Driver Recruitment (Only sign to Expired Contract Slots)",
+                btnRandomize: "Randomize Contracts",
+                btnConfirmTransfer: "Confirm & Start Season",
+                standingsTitle: "Current Driver Standings",
+                standingsRank: "Rank",
+                standingsDriver: "Driver",
+                standingsTeam: "Team",
+                standingsPoints: "Points",
+                standingsContract: "Contract End",
+                newsTitle: "Breaking News",
+                rookieFormTitle: "🌟 Create Custom Rookie",
+                rookieFormDesc: "You can create a potential young driver to enter the Free Agent market.",
+                rookieNameLabel: "Name (Max 25 characters):",
+                rookieNationalityLabel: "Nationality:",
+                rookieAgeLabel: "Age (18-25):",
+                rookiePerfLabel: "Performance (0.60 - 1.00):",
+                rookieCreateBtn: "Create & Add to FA",
+                transferButtonStart: "1. START RECRUITMENT & RETIREMENT PHASE",
+                transferButtonSkip: "2. Skip & Start Season",
+                transferTableCurrentDriver: "Current Driver (Contract)",
+                transferTableRecruit: "New Recruitment",
+                transferTableTeam: "Racing Team",
+                transferTableSlot1: "Slot 1",
+                transferTableSlot2: "Slot 2",
+                transferTableHeader: "Current Driver (Contract)",
+                transferTableHeaderNew: "New Recruit",
+                seasonCompleteTitle: "🏁 Season Complete!",
+                seasonCompleteText: "The next season is",
+                tableHeaderRaceName: "Race Name",
+                tableHeaderWinner: "Winner",
+                tableHeaderTeam: "Team",
+                championshipHistoryWinner: "Champion",
+                championshipHistoryTeam: "Team",
+                newsInitial: "Welcome to the 2025 Season!",
+                newsRookieSuccess: (name, perf) => `🎉 Rookie **${name}** (P: ${perf}) has been created and joined the Free Agent market!`,
+                newsRetirement: (names) => `🛑 **RETIREMENT:** ${names} have officially hung up their helmets after this season.`,
+                newsPriority: (signers) => `💎 **SUPER DEAL:** High Performance drivers have been **AUTOMATICALLY** signed to a 3-year contract! (${signers})`,
+                newsExpired: (names) => `🔔 **CONTRACT EXPIRED:** ${names} have become Free Agents (FA) and are looking for a new home.`,
+                newsHired: (name, team) => `🎉 **HOT DEAL:** Young driver ${name} officially signed a contract with ${team}! Bright future ahead?`,
+                newsRemovedFA: (names) => `🔥 **REMOVED FROM GAME:** Free Agents **${names}** have been removed from the game for failing to find a contract for more than 3 seasons.`,
+                transferErrorSlot: (driver, team) => `Transfer Error: ${driver} has already been signed to the ${team} team. Please correct.`,
+                alertRookieExist: (name) => `Error: Driver "${name}" already exists. Please choose another name.`,
+                alertRookiePerf: "Error: Performance (P) must be between 0.60 and 1.00.",
+                alertRookieAge: "Error: Age must be between 18 and 25.",
+                alertRookieName: "Error: Please enter a valid Name (under 25 characters).",
+                alertRookieAdded: (name) => `Rookie "${name}" successfully added to the Free Agent list.`,
+                alertTransferConfirm: "✅ Are you sure you want to **Confirm** these contracts and **Start the New Season**?",
+                alertSim100Confirm: (start, end) => `⚠️ WARNING: Are you sure you want to **Quick Simulate 100 Years** from ${start} to ${end}? The game will automatically advance to ${end+1} after completion.`,
+                alertSim100Complete: (year) => `Successfully simulated 100 years. The game is now in Season ${year}.`,
+                alertResetConfirm: "⚠️ WARNING: Are you sure you want to reset the entire Game to the initial 2025 Season? All progress will be lost.",
+                alertResetComplete: "Game has been reset to the initial 2025 Season.",
+                alertRandomizeComplete: 'Contracts have been randomized. You can edit unlocked contracts before confirming!',
+                faYearsInfo: (years) => ` (FA: ${years}/3)`,
+                rookieDefaultName: "My New Rookie",
+                rookieDefaultNationality: "Unknown"
+            }
+        };
+
+
+        // ################## LOGIC CHUYỂN ĐỔI NGÔN NGỮ ##################
+
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'VI' ? 'EN' : 'VI';
+            document.getElementById('languageToggle').textContent = `Language: ${currentLanguage}`;
+            updateLanguage(currentLanguage);
+            updateStandings(); // Cập nhật lại Bảng xếp hạng
+            // Cần cập nhật lại các nội dung động
+            if (document.getElementById('transferWindow').style.display !== 'none') {
+                renderTransferTable();
+            } else if (currentRaceIndex >= RACE_CALENDAR.length) {
+                // Nếu đang ở màn hình Season Complete
+                showSeasonCompleteScreen(); 
+            } else if (document.getElementById('championshipHistory').style.display !== 'none') {
+                displayChampionshipHistory();
+            }
+        }
+        
+        function updateLanguage(lang) {
+            const dict = DICTIONARY[lang];
+            
+            // Cập nhật các phần tử HTML tĩnh
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (dict[key] && typeof dict[key] === 'string') {
+                    // Xử lý tiêu đề đặc biệt (có kèm năm)
+                    if (key === 'appTitle') {
+                        element.innerHTML = `${dict[key]} <span id="currentSeasonDisplay">${currentSeason}</span>`;
+                    } else if (key === 'transferTitle') {
+                         element.innerHTML = `${dict[key]} <span id="transferSeasonYear">${currentSeason}</span> ${lang === 'VI' ? 'sang' : 'to'} <span id="nextSeasonYear">${currentSeason + 1}</span>`;
+                    } else if (key === 'btnToggleDark') {
+                        // Cập nhật text của nút Dark Mode
+                        element.textContent = lang === 'VI' ? (document.body.classList.contains('dark-mode') ? 'Toggle Light Mode' : 'Toggle Dark Mode') : (document.body.classList.contains('dark-mode') ? 'Toggle Light Mode' : 'Toggle Dark Mode');
+                    } else if (key === 'btnConfirmTransfer') {
+                        element.innerHTML = `${dict[key]} <span id="nextSeasonYearConfirm">${currentSeason + 1}</span>`;
+                    } else if (key === 'btnToggleHistory') {
+                        element.textContent = dict[key];
+                    } else if (key === 'raceResultTitle') {
+                         element.innerHTML = `${dict[key]} <span id="currentRaceName">${document.getElementById('currentRaceName').textContent}</span>`;
+                    } else {
+                        element.textContent = dict[key];
+                    }
+                }
+            });
+            
+            // Cập nhật giá trị mặc định cho form Rookie (Input Placeholder)
+            document.getElementById('rookieName').value = dict.rookieDefaultName;
+            document.getElementById('rookieNationality').value = dict.rookieDefaultNationality;
+            
+            // Cập nhật Newslist
+             // Chức năng này sẽ được xử lý khi gọi hàm thêm tin tức
+        }
+        
+        // Cần có hàm này để cập nhật màn hình Season Complete sau khi chuyển ngôn ngữ
+        function showSeasonCompleteScreen() {
+             const dict = DICTIONARY[currentLanguage];
+             const nextYear = currentSeason + 1;
+             
+             document.getElementById('raceResult').innerHTML = `
+                 <h2 class="season-complete">${dict.seasonCompleteTitle} ${currentSeason}!</h2>
+                 <p>${dict.seasonCompleteText} **${nextYear}**.</p>
+                 <button onclick="startTransferWindow()" style="background-color: purple;">${dict.transferButtonStart}</button>
+                 <button onclick="startNewSeason(false)">${dict.transferButtonSkip} ${nextYear}</button>
+             `;
+        }
+
+        // ################## LOGIC CHUYỂN ĐỔI DARK MODE ##################
+
+        function toggleDarkMode() {
+            const body = document.body;
+            const toggleButton = document.getElementById('darkModeToggle');
+            const rookieForm = document.getElementById('rookieCreationForm');
+            const lang = DICTIONARY[currentLanguage];
+
+            body.classList.toggle('dark-mode');
+
+            // Cập nhật nút
+            if (body.classList.contains('dark-mode')) {
+                toggleButton.textContent = currentLanguage === 'VI' ? 'Toggle Light Mode' : 'Toggle Light Mode';
+            } else {
+                toggleButton.textContent = currentLanguage === 'VI' ? 'Toggle Dark Mode' : 'Toggle Dark Mode';
+            }
+
+            // Cập nhật form Rookie nếu nó đang hiển thị
+            if (rookieForm) {
+                 if (body.classList.contains('dark-mode')) {
+                    rookieForm.style.backgroundColor = '#333';
+                    rookieForm.style.borderColor = '#4dc4ff';
+                    rookieForm.style.color = '#e0e0e0';
+                } else {
+                    rookieForm.style.backgroundColor = '#e6f7ff';
+                    rookieForm.style.borderColor = '#008cba';
+                    rookieForm.style.color = '#333';
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+             // Khởi tạo ngôn ngữ ban đầu
+             updateLanguage(currentLanguage); 
+             document.getElementById('languageToggle').textContent = `Language: ${currentLanguage}`;
+             
+             // Gọi hàm toggle để thiết lập trạng thái ban đầu dựa trên class body
+             if (document.body.classList.contains('dark-mode')) {
+                 toggleDarkMode(); 
+             } else {
+                 toggleDarkMode(); 
+             }
+             
+             updateStandings();
+        });
+
+        // ################## KHỞI TẠO TAY ĐUA VÀ HỢP ĐỒNG ##################
+
+        function initializeDrivers() {
+            return INITIAL_DRIVERS_DATA.map(d => ({
+                ...d,
+                contractDuration: d.contractLength || 1, 
+                faYears: 0,
+                isCustom: false
+            }));
+        }
+
+        // ################## TẠO ROOKIE TÙY CHỈNH ##################
+        function createCustomRookie() {
+            const dict = DICTIONARY[currentLanguage];
+            const nameInput = document.getElementById('rookieName').value.trim();
+            const nationalityInput = document.getElementById('rookieNationality').value.trim();
+            const ageInput = parseInt(document.getElementById('rookieAge').value);
+            const perfInput = parseFloat(document.getElementById('rookiePerf').value);
+
+            if (!nameInput || nameInput.length > 25) {
+                alert(dict.alertRookieName);
+                return;
+            }
+            if (drivers.some(d => d.name === nameInput)) {
+                alert(dict.alertRookieExist(nameInput));
+                return;
+            }
+            if (perfInput < 0.60 || perfInput > 1.00 || isNaN(perfInput)) {
+                 alert(dict.alertRookiePerf);
+                return;
+            }
+            if (ageInput < 18 || ageInput > 25 || isNaN(ageInput)) {
+                alert(dict.alertRookieAge);
+                return;
+            }
+            
+            const newRookie = {
+                name: nameInput,
+                team: "Free Agent",
+                points: 0,
+                performance: parseFloat(perfInput.toFixed(3)),
+                age: ageInput,
+                experience: 0,
+                contractDuration: 0,
+                contractLength: 0,
+                faYears: 0,
+                nationality: nationalityInput || "Unknown",
+                isCustom: true
+            };
+
+            drivers.push(newRookie);
+            USED_ROOKIE_NAMES.push(nameInput); 
+
+            addNews(dict.newsRookieSuccess(nameInput, newRookie.performance), true);
+            alert(dict.alertRookieAdded(nameInput));
+
+            // Cập nhật lại table transfer để thấy sự xuất hiện của Rookie mới
+            renderTransferTable(); 
+        }
+
+        // ################## HÀM TẠO FREE AGENT NGẪU NHIÊN ##################
+        function getRandomName(isFastSim = false) {
+            const potentialNames = AVAILABLE_ROOKIE_NAMES.filter(name => !USED_ROOKIE_NAMES.includes(name));
+            
+            if (potentialNames.length > 0) {
+                const randomIndex = Math.floor(Math.random() * potentialNames.length);
+                const rookieName = potentialNames[randomIndex];
+                USED_ROOKIE_NAMES.push(rookieName);
+                return rookieName;
+            } else {
+                const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+                const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+                let newName = `${firstName} ${lastName}`;
+                
+                if (!isFastSim) {
+                    while (drivers.some(d => d.name === newName)) {
+                        const f = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+                        const l = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+                        newName = `${f} ${l}`;
+                    }
+                }
+                
+                return newName;
+            }
+        }
+
+
+        function generateFreeAgent() {
+            const rookieName = getRandomName();
+            const rookiePerformance = 0.65 + Math.random() * 0.10; 
+            
+            return {
+                name: rookieName, 
+                team: "Free Agent", 
+                points: 0, 
+                performance: parseFloat(rookiePerformance.toFixed(3)),
+                age: 20 + Math.floor(Math.random() * 6), 
+                experience: 0,
+                contractDuration: 0,
+                contractLength: 0,
+                faYears: 0,
+                nationality: DICTIONARY[currentLanguage].rookieDefaultNationality, 
+                isCustom: false
+            };
+        }
+
+        // ################## HÀM XỬ LÝ GIẢI NGHỆ ##################
+        function handleRetirement() {
+            let retiredDrivers = [];
+
+            drivers = drivers.filter(driver => {
+                if (driver.team === "Free Agent") return true; 
+                
+                const retirementChance = 
+                    driver.age >= 42 ? 0.95 : 
+                    driver.age >= 40 ? 0.7 :
+                    driver.age >= 38 ? 0.3 :
+                    0;
+                
+                if (Math.random() < retirementChance) {
+                    retiredDrivers.push(driver.name);
+                    if (!USED_ROOKIE_NAMES.includes(driver.name)) {
+                        USED_ROOKIE_NAMES.push(driver.name); 
+                    }
+                    return false; 
+                }
+                return true;
+            });
+            
+            return retiredDrivers;
+        }
+        
+        // ################## HÀM XỬ LÝ KÝ HỢP ĐỒNG ƯU TIÊN ##################
+        function handlePrioritySigning() {
+            let prioritySigned = [];
+            let priorityDrivers = drivers.filter(d => d.team === "Free Agent" && d.performance >= 0.90).sort((a,b) => b.performance - a.performance);
+            let availableTopSlots = [];
+
+            const allTeams = getUniqueTeams();
+            const slotTracker = new Set();
+            
+            drivers.filter(d => d.team !== "Free Agent" && d.contractDuration > 0).forEach(d => {
+                 slotTracker.add(`${d.team}-SIGNED`);
+            });
+
+            allTeams.forEach(teamName => {
+                if(TOP_TEAMS.includes(teamName)) {
+                    const teamDrivers = drivers.filter(d => d.team === teamName); 
+                    
+                    for(let i = 1; i <= 2; i++) {
+                        const currentDriver = teamDrivers.find((d, index) => index === i-1);
+                         
+                        if (!currentDriver || currentDriver.contractDuration <= 0) {
+                              if (!slotTracker.has(`${teamName}-${i}`)) {
+                                   availableTopSlots.push({ team: teamName, slotIndex: i, currentDriver: currentDriver ? currentDriver.name : "OPEN" });
+                                   slotTracker.add(`${teamName}-${i}`);
+                              }
+                        } else {
+                              slotTracker.add(`${teamName}-${i}`);
+                        }
+                    }
+                }
+            });
+            
+            
+            priorityDrivers.forEach(pDriver => {
+                if (pDriver.team !== "Free Agent" && pDriver.contractDuration > 0) return;
+                
+                if (availableTopSlots.length > 0) {
+                    const slotIndex = Math.floor(Math.random() * availableTopSlots.length);
+                    const chosenSlot = availableTopSlots[slotIndex];
+                    
+                    pDriver.team = chosenSlot.team;
+                    pDriver.contractDuration = 3;
+                    pDriver.contractLength = 3;
+                    pDriver.faYears = 0;
+                    
+                    prioritySigned.push({ name: pDriver.name, team: pDriver.team });
+                    
+                    availableTopSlots.splice(slotIndex, 1);
+                    slotTracker.delete(`${chosenSlot.team}-${chosenSlot.slotIndex}`);
+                    
+                }
+            });
+            
+            return prioritySigned;
+        }
+
+
+        // ################## HÀM LOGIC CHÍNH ##################
+
+        function simulateRace(isFastSim = false) {
+            const currentDrivers = drivers.filter(d => d.team !== "Free Agent");
+            
+            if (currentDrivers.length < 10) {
+                if (!isFastSim) {
+                    addNews(`!!! LỖI CẤP BÁCH: Chỉ còn ${currentDrivers.length} tay đua trên grid!`, true);
+                }
+                 if (currentDrivers.length === 0) {
+                     return [];
+                 }
+            }
+
+
+            const raceResults = currentDrivers.map(driver => {
+                const luckFactor = (Math.random() - 0.5) * 0.2; 
+                const totalScore = driver.performance + luckFactor;
+                return { ...driver, score: totalScore };
+            });
+
+            raceResults.sort((a, b) => b.score - a.score);
+
+            const topSeven = raceResults.slice(0, 7);
+            const fastestLapDriver = topSeven.length > 0 ? topSeven[Math.floor(Math.random() * topSeven.length)] : null;
+
+            return raceResults.map((driver, index) => ({
+                name: driver.name,
+                team: driver.team,
+                position: index + 1,
+                points: 0, 
+                isFastestLap: fastestLapDriver && driver.name === fastestLapDriver.name
+            }));
+        }
+
+        function calculatePoints(raceResults) {
+            raceResults.forEach((driverResult, index) => {
+                const position = index + 1;
+                let racePoints = 0;
+
+                if (position <= 10) {
+                    racePoints = FIA_POINTS[position - 1];
+                }
+
+                if (driverResult.isFastestLap && position <= 10) {
+                    racePoints += 1;
+                }
+                
+                const driverIndex = drivers.findIndex(d => d.name === driverResult.name);
+                if (driverIndex !== -1) {
+                    drivers[driverIndex].points += racePoints;
+                }
+                
+                driverResult.points = racePoints;
+            });
+        }
+
+        function addNews(content, isTransfer = false) {
+            const newsList = document.getElementById('newsList');
+            const li = document.createElement('li');
+            li.innerHTML = `📰 ${content}`;
+            
+            newsList.prepend(li);
+            
+            while (newsList.children.length > 15) {
+                newsList.removeChild(newsList.lastChild);
+            }
+        }
+        
+        function updateBreakingNews(raceName, raceResults) {
+            let news = [];
+            const top3 = raceResults.slice(0, 3);
+            const flDriver = raceResults.find(r => r.isFastestLap);
+            const lang = DICTIONARY[currentLanguage];
+
+            if (top3.length > 0) {
+                 const winnerName = top3[0].name;
+                 const winnerTeam = top3[0].team;
+                 news.push(currentLanguage === 'VI' ? `🏆 ${winnerName} (${winnerTeam}) giành chiến thắng tại ${raceName}!` : `🏆 ${winnerName} (${winnerTeam}) wins the ${raceName}!`);
+            }
+            if (flDriver) {
+                const flName = flDriver.name;
+                news.push(currentLanguage === 'VI' ? `🔥 ${flName} có Fastest Lap, giành thêm 1 điểm.` : `🔥 ${flName} sets the Fastest Lap, earning an extra point.`);
+            }
+            
+            if (Math.random() < 0.25) {
+                const driver = drivers.find(d => d.team !== "Free Agent" && d.contractDuration <= 1);
+                if (driver) {
+                    const driverName = driver.name;
+                    news.push(currentLanguage === 'VI' ? `⚠️ Rumour: ${driverName} sắp hết hợp đồng, các đội top đang theo dõi sát sao!` : `⚠️ Rumour: ${driverName}'s contract is nearing its end, top teams are closely monitoring!`);
+                }
+            }
+
+            news.reverse().forEach(item => addNews(`${raceName}: ${item}`));
+        }
+        
+        function updateTransferNews(retiredDrivers, contractExpiredDrivers, faHired, prioritySigned) {
+            const dict = DICTIONARY[currentLanguage];
+            
+            if (retiredDrivers.length > 0) {
+                 addNews(dict.newsRetirement(retiredDrivers.join(', ')), true);
+            }
+
+            if (prioritySigned.length > 0) {
+                 const signers = prioritySigned.map(d => `${d.name} ${currentLanguage === 'VI' ? 'cho' : 'to'} ${d.team}`).join(', ');
+                 addNews(dict.newsPriority(signers), true);
+            }
+            
+            if (contractExpiredDrivers.length > 0) {
+                addNews(dict.newsExpired(contractExpiredDrivers.join(', ')), true);
+            }
+
+            faHired.forEach(driverName => {
+                const driver = drivers.find(d => d.name === driverName);
+                if (driver) {
+                    addNews(dict.newsHired(driverName, driver.team), true);
+                }
+            });
+            
+            if (Math.random() < 0.5) {
+                 const driver = drivers[Math.floor(Math.random() * drivers.length)];
+                 if (driver) {
+                    addNews(currentLanguage === 'VI' ? `🔍 **GOSSIP:** ${driver.name} có thể là ứng cử viên tiềm năng để thay thế một tay đua tại đội Red Bull/Ferrari.` : `🔍 **GOSSIP:** ${driver.name} could be a potential candidate to replace a driver at Red Bull/Ferrari.`, true);
+                 }
+            }
+            
+        }
+
+        function runNextRace() {
+            document.getElementById('transferWindow').style.display = 'none';
+            document.getElementById('championshipHistory').style.display = 'none';
+
+            if (currentRaceIndex >= RACE_CALENDAR.length) {
+                // Kết thúc mùa giải - Ghi lại nhà vô địch
+                const champion = drivers.filter(d => d.team !== "Free Agent").sort((a, b) => b.points - a.points)[0];
+                if (champion) {
+                    championshipHistory.push({ year: currentSeason, champion: champion.name, team: champion.team });
+                }
+
+                showSeasonCompleteScreen();
+                document.getElementById('runRaceButton').style.display = 'none';
+                updateStandings();
+                return;
+            }
+
+            const raceName = RACE_CALENDAR[currentRaceIndex];
+            document.getElementById('currentRaceName').textContent = raceName;
+
+            const results = simulateRace();
+            calculatePoints(results);
+            updateBreakingNews(raceName, results); 
+            
+            seasonRaceHistory.push({ raceName: raceName, results: JSON.parse(JSON.stringify(results)) });
+
+            const tableHeaderPos = currentLanguage === 'VI' ? 'Vị trí' : 'Pos';
+            const tableHeaderDriver = currentLanguage === 'VI' ? 'Tay Đua' : 'Driver';
+            const tableHeaderTeam = currentLanguage === 'VI' ? 'Đội' : 'Team';
+            const tableHeaderPoints = currentLanguage === 'VI' ? 'Điểm' : 'Points';
+            const tableHeaderNote = currentLanguage === 'VI' ? 'Ghi chú' : 'Note';
+
+            let resultTable = `| ${tableHeaderPos} | ${tableHeaderDriver} | ${tableHeaderTeam} | ${tableHeaderPoints} | ${tableHeaderNote} |\n|---|---|---|---|---|\n`;
+            results.forEach((r) => {
+                const fastestLapMarker = r.isFastestLap ? '<span class="fastest-lap">🔥 FL</span>' : '';
+                resultTable += `| ${r.position} | ${r.name} | ${r.team} | ${r.points} | ${fastestLapMarker} |\n`;
+            });
+            
+            document.getElementById('raceLog').innerHTML = `${convertToHTMLTable(resultTable)}`;
+            updateStandings();
+
+            currentRaceIndex++;
+            document.getElementById('seasonHistory').style.display = 'none'; 
+        }
+
+        // ################## LOGIC MÔ PHỎNG 100 NĂM ##################
+
+        function simulate100Years() {
+            const startYear = currentSeason;
+            const endYear = startYear + 99;
+            const targetYear = startYear + 100;
+            const dict = DICTIONARY[currentLanguage];
+
+            const isConfirmed = confirm(dict.alertSim100Confirm(startYear, endYear));
+            
+            if (!isConfirmed) {
+                return;
+            }
+
+            document.getElementById('raceResult').innerHTML = `<h2>${currentLanguage === 'VI' ? 'Đang Xử Lý...' : 'Processing...'}</h2><p>${currentLanguage === 'VI' ? 'Vui lòng chờ. Quá trình này có thể mất vài giây.' : 'Please wait. This process may take a few seconds.'}</p>`;
+            document.getElementById('mainControls').style.display = 'none';
+            document.getElementById('runRaceButton').style.display = 'none';
+            document.getElementById('transferWindow').style.display = 'none';
+            document.getElementById('championshipHistory').style.display = 'none';
+            document.getElementById('seasonHistory').style.display = 'none';
+
+            setTimeout(() => {
+                let tempChampionshipHistory = [];
+                
+                for (let year = startYear; year < targetYear; year++) {
+                    
+                    for (let race = 0; race < RACE_CALENDAR.length; race++) {
+                        const results = simulateRace(true); 
+                        calculatePoints(results);
+                    }
+
+                    const champion = drivers.filter(d => d.team !== "Free Agent").sort((a, b) => b.points - a.points)[0];
+                    if (champion) {
+                        tempChampionshipHistory.push({ year: year, champion: champion.name, team: champion.team });
+                    }
+
+                    let contractExpiredDrivers = [];
+                    drivers.forEach(d => {
+                        if (d.team !== "Free Agent") {
+                            d.contractDuration -= 1;
+                            if (d.contractDuration <= 0) {
+                                contractExpiredDrivers.push(d.name);
+                                d.team = "PENDING_FA"; 
+                                d.faYears = 0;
+                                d.contractDuration = 0;
+                                d.contractLength = 0;
+                            }
+                        }
+                    });
+                    
+                    handleRetirement();
+
+                    drivers.forEach(d => {
+                        if (d.team === "Free Agent") {
+                            d.faYears += 1; 
+                        } else if (d.team === "PENDING_FA") {
+                            d.team = "Free Agent";
+                            d.faYears = 0;
+                        }
+                    });
+
+                    drivers = drivers.filter(d => !(d.team === "Free Agent" && d.faYears > 3));
+                    handlePrioritySigning();
+                    
+                    for (let i = 0; i < 3; i++) {
+                        const newFreeAgent = generateFreeAgent();
+                        drivers.push(newFreeAgent);
+                    }
+
+                    const teams = getUniqueTeams();
+                    let newContractsMap = {}; 
+                    let selectedDrivers = drivers.filter(d => d.contractDuration > 0 && d.team !== "Free Agent").map(d => d.name);
+
+                    teams.forEach(teamName => {
+                        const teamDriversWithContract = drivers.filter(d => d.team === teamName && d.contractDuration > 0).sort((a,b) => b.performance - a.performance);
+                        
+                        for (let i = 1; i <= 2; i++) {
+                            const driver = teamDriversWithContract[i - 1];
+                            
+                            if (driver && driver.contractDuration > 0) continue; 
+                            
+                            let choice = null;
+                            const candidateDrivers = drivers.filter(d => d.contractDuration === 0 && d.team === "Free Agent" && !selectedDrivers.includes(d.name));
+                            
+                            if (candidateDrivers.length > 0) {
+                                candidateDrivers.sort((a,b) => b.performance - a.performance);
+                                choice = candidateDrivers[0].name;
+                            }
+
+                            if (choice) {
+                                const driverObj = drivers.find(d => d.name === choice);
+                                const duration = driverObj.performance >= 0.90 ? 3 : 1;
+                                
+                                newContractsMap[choice] = { team: teamName, duration: duration };
+                                selectedDrivers.push(choice);
+                            }
+                        }
+                    });
+
+                    drivers.forEach(d => {
+                        const contract = newContractsMap[d.name];
+                        
+                        if (contract) {
+                            d.team = contract.team;
+                            d.contractDuration = contract.duration;
+                            d.contractLength = contract.duration;
+                            d.faYears = 0;
+                        } else if (d.team !== "Free Agent") {
+                            d.team = "Free Agent";
+                            d.contractDuration = 0;
+                            d.contractLength = 0;
+                            d.faYears = 0; 
+                        }
+
+                        d.age = (d.age || 25) + 1;
+                        d.experience = (d.experience || 1) + 1;
+                        
+                        let performanceIncrease = 0;
+                        if (d.age < 28) { 
+                            performanceIncrease = Math.random() * 0.008 + 0.002;
+                        } else if (d.age < 35) { 
+                            performanceIncrease = Math.random() * 0.003 - 0.001;
+                        } else { 
+                            performanceIncrease = Math.random() * -0.005;
+                        }
+                        
+                        d.performance = parseFloat((d.performance + performanceIncrease).toFixed(3));
+                        d.performance = Math.max(0.60, Math.min(1.0, d.performance)); 
+                        
+                        d.points = 0;
+                    });
+                }
+                
+                currentSeason = targetYear;
+                currentRaceIndex = 0;
+                seasonRaceHistory = [];
+                
+                document.getElementById('currentSeasonDisplay').textContent = currentSeason;
+                document.getElementById('mainControls').style.display = 'block';
+                document.getElementById('raceResult').style.display = 'block';
+                document.getElementById('raceResult').innerHTML = `
+                    <h2>${dict.raceResultTitle} <span id="currentRaceName">${currentLanguage === 'VI' ? 'Đã Mô Phỏng Nhanh Đến Mùa Giải' : 'Quick Simulation Complete up to Season'} ${currentSeason}!</span></h2>
+                    <pre id="raceLog">${currentLanguage === 'VI' ? `Hãy nhấn 'Chạy Chặng Đua Tiếp Theo' để tiếp tục từ năm ${currentSeason}.` : `Press 'Run Next Race' to continue from ${currentSeason}.`}</pre>
+                `;
+                document.getElementById('runRaceButton').style.display = 'inline-block';
+                
+                updateStandings();
+                
+                championshipHistory = tempChampionshipHistory;
+                displayChampionshipHistory();
+                
+                alert(dict.alertSim100Complete(currentSeason));
+
+            }, 50); 
+        }
+
+        function displayChampionshipHistory() {
+            const historyDiv = document.getElementById('championshipHistory');
+            const dict = DICTIONARY[currentLanguage];
+            historyDiv.style.display = 'block';
+            historyDiv.innerHTML = `<h2 data-i18n="championshipTitle">${dict.championshipTitle}</h2>`; 
+            
+            let tableHTML = `
+                <table style="width: 50%;">
+                    <thead>
+                        <tr>
+                            <th>${currentLanguage === 'VI' ? 'Năm' : 'Year'}</th>
+                            <th>${dict.championshipHistoryWinner}</th>
+                            <th>${dict.championshipHistoryTeam}</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            championshipHistory.forEach(record => {
+                tableHTML += `
+                    <tr>
+                        <td>${record.year}</td>
+                        <td><strong>${record.champion}</strong></td>
+                        <td>${record.team}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            historyDiv.innerHTML += tableHTML;
+        }
+
+        // ################## HÀM CHUYỂN ĐỘI/MÙA GIẢI ##################
+
+        function getUniqueTeams() {
+            const initialTeams = INITIAL_DRIVERS_DATA.map(d => d.team);
+            return [...new Set(initialTeams)].sort();
+        }
+        
+        function startTransferWindow() {
+            const dict = DICTIONARY[currentLanguage];
+            let contractExpiredDrivers = [];
+            document.getElementById('championshipHistory').style.display = 'none';
+
+            drivers.forEach(d => {
+                if (d.team !== "Free Agent") {
+                    d.contractDuration -= 1;
+                    if (d.contractDuration <= 0) {
+                         contractExpiredDrivers.push(d.name);
+                         d.team = "PENDING_FA"; 
+                         d.faYears = 0; 
+                         d.contractDuration = 0;
+                         d.contractLength = 0;
+                    }
+                }
+            });
+            
+            const retiredDrivers = handleRetirement();
+            
+            const retirementInfoDiv = document.getElementById('retirementInfo');
+            if (retiredDrivers.length > 0) {
+                 retirementInfoDiv.style.display = 'block';
+                 retirementInfoDiv.innerHTML = dict.newsRetirement(retiredDrivers.join(', '));
+            } else {
+                 retirementInfoDiv.style.display = 'none';
+            }
+
+            let removedFaNames = [];
+            drivers.forEach(d => {
+                if (d.team === "Free Agent") {
+                    d.faYears += 1; 
+                } else if (d.team === "PENDING_FA") {
+                    d.team = "Free Agent";
+                }
+            });
+
+            drivers = drivers.filter(d => {
+                if (d.team === "Free Agent" && d.faYears > 3) {
+                    removedFaNames.push(d.name);
+                    return false; 
+                }
+                return true; 
+            });
+            
+            if (removedFaNames.length > 0) {
+                 addNews(dict.newsRemovedFA(removedFaNames.join(', ')), true);
+            }
+            
+            const prioritySigned = handlePrioritySigning();
+            let prioritySigningHtml = '';
+            const prioritySigningDiv = document.getElementById('prioritySigningInfo');
+            if(prioritySigned.length > 0) {
+                 prioritySigningHtml = (currentLanguage === 'VI' ? '⭐ Tay Đua **Performance $\ge 0.90$** đã được tự động ký HĐ 3 năm:<br>' : '⭐ **Performance $\ge 0.90$** drivers have been automatically signed to 3-year contracts:<br>');
+                 prioritySigned.forEach(d => {
+                    prioritySigningHtml += ` - <strong>${d.name}</strong> ${currentLanguage === 'VI' ? 'cho team' : 'to team'} ${d.team}<br>`;
+                 });
+                 prioritySigningDiv.style.display = 'block';
+                 prioritySigningDiv.innerHTML = prioritySigningHtml;
+            } else {
+                 prioritySigningDiv.style.display = 'none';
+            }
+
+
+            let faInfoHtml = (currentLanguage === 'VI' ? '⭐ Tay Đua Tự Do Mới (Ngẫu nhiên):<br>' : '⭐ New Random Free Agents:<br>');
+            for (let i = 0; i < 3; i++) {
+                const newFreeAgent = generateFreeAgent();
+                drivers.push(newFreeAgent);
+                faInfoHtml += ` - <strong>${newFreeAgent.name}</strong> (P: ${newFreeAgent.performance})<br>`;
+            }
+            
+            const customRookiesCount = drivers.filter(d => d.isCustom).length;
+            if (customRookiesCount > 0) {
+                 faInfoHtml += `<br>${currentLanguage === 'VI' ? '⭐ Có' : '⭐ There are'} **${customRookiesCount}** ${currentLanguage === 'VI' ? 'Rookie Tùy Chỉnh do bạn tạo đang ở trạng thái FA!' : 'Custom Rookies you created currently in FA status!'}`;
+            }
+            
+            faInfoHtml += currentLanguage === 'VI' ? "<br>Nếu không được chiêu mộ, họ sẽ bị loại khỏi game sau 3 mùa giải!" : "<br>If not recruited, they will be eliminated from the game after 3 seasons!";
+
+            document.getElementById('runRaceButton').style.display = 'none';
+            document.getElementById('mainControls').style.display = 'none';
+            document.getElementById('raceResult').style.display = 'none';
+            document.getElementById('transferWindow').style.display = 'block';
+            document.getElementById('transferSeasonYear').textContent = currentSeason;
+            document.getElementById('nextSeasonYear').textContent = currentSeason + 1;
+            document.getElementById('nextSeasonYearConfirm').textContent = currentSeason + 1;
+            document.getElementById('freeAgentInfo').innerHTML = faInfoHtml;
+            
+            renderTransferTable();
+            
+            updateTransferNews(retiredDrivers, contractExpiredDrivers, [], prioritySigned);
+        }
+        
+        function renderTransferTable(randomChoices = []) {
+            const teams = getUniqueTeams();
+            const transferTable = document.getElementById('transferTable');
+            const dict = DICTIONARY[currentLanguage];
+
+            let assignedDrivers = drivers.filter(d => d.contractDuration > 0 && d.team !== "Free Agent").map(d => d.name);
+            randomChoices.forEach(c => {
+                if (c.choice && !assignedDrivers.includes(c.choice)) {
+                    assignedDrivers.push(c.choice);
+                }
+            });
+
+            const allAvailableDrivers = drivers.filter(d => d.team === "Free Agent" || assignedDrivers.includes(d.name));
+
+
+            let tableHTML = `
+                <thead>
+                    <tr>
+                        <th rowspan="2" data-i18n="transferTableTeam">${dict.transferTableTeam}</th>
+                        <th colspan="2" style="text-align:center;" data-i18n="transferTableSlot1">${dict.transferTableSlot1}</th>
+                        <th colspan="2" style="text-align:center;" data-i18n="transferTableSlot2">${dict.transferTableSlot2}</th>
+                    </tr>
+                    <tr>
+                        <th data-i18n="transferTableHeader">${dict.transferTableHeader}</th>
+                        <th data-i18n="transferTableHeaderNew">${dict.transferTableHeaderNew} (1)</th>
+                        <th data-i18n="transferTableHeader">${dict.transferTableHeader}</th>
+                        <th data-i18n="transferTableHeaderNew">${dict.transferTableHeaderNew} (2)</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            teams.forEach(teamName => {
+                const teamDriversWithContract = drivers.filter(d => d.team === teamName && d.contractDuration > 0).sort((a,b) => b.performance - a.performance);
+
+                let driver1 = teamDriversWithContract[0] || { name: "OPEN CONTRACT", performance: 0, team: teamName, contractDuration: 0 };
+                let driver2 = teamDriversWithContract[1] || { name: "OPEN CONTRACT", performance: 0, team: teamName, contractDuration: 0 };
+                
+                if (driver1.name === driver2.name && driver1.name !== "OPEN CONTRACT") {
+                    if (teamDriversWithContract.length === 2) {
+                        driver2 = { name: "OPEN CONTRACT", performance: 0, team: teamName, contractDuration: 0 };
+                    } else if (teamDriversWithContract.length === 1) {
+                        driver2 = { name: "OPEN CONTRACT", performance: 0, team: teamName, contractDuration: 0 };
+                    }
+                }
+                
+                const id1 = `transfer-${teamName.replace(/\s/g, '')}-1`;
+                const id2 = `transfer-${teamName.replace(/\s/g, '')}-2`;
+                
+                const randomChoice1 = randomChoices.find(d => d.id === id1)?.choice;
+                const randomChoice2 = randomChoices.find(d => d.id === id2)?.choice;
+                
+                
+                const createSelectOptions = (driverToReplace, currentChoiceName, otherSlotChoice) => {
+                    const currentPerf = driverToReplace.performance ? ` (P: ${driverToReplace.performance})` : '';
+                    const contractText = currentLanguage === 'VI' ? 'HĐ' : 'Contract';
+                    const expiredText = currentLanguage === 'VI' ? 'Hết HĐ' : 'Expired';
+                    const openText = currentLanguage === 'VI' ? '-- CHỌN TAY ĐUA --' : '-- SELECT DRIVER --';
+                    const keepText = currentLanguage === 'VI' ? '-- Giữ' : '-- Keep';
+                    const yearsText = currentLanguage === 'VI' ? 'năm' : 'years';
+
+
+                    let options = `<option value="">${openText}</option>`;
+                    
+                    if (driverToReplace.contractDuration > 0 && driverToReplace.name !== "OPEN CONTRACT") {
+                         options = `<option value="${driverToReplace.name}" selected disabled>${driverToReplace.name} ${currentPerf} (${contractText}: ${driverToReplace.contractDuration} ${yearsText})</option>`;
+                         return options;
+                    }
+                    
+                    if (driverToReplace.name !== "OPEN CONTRACT") {
+                        options += `<option value="${driverToReplace.name}">${keepText} ${driverToReplace.name} ${currentPerf} --</option>`;
+                    }
+
+                    if (currentChoiceName && currentChoiceName !== driverToReplace.name) {
+                        const currentChoiceDriver = drivers.find(d => d.name === currentChoiceName);
+                        if(currentChoiceDriver) {
+                            const perfTag = currentChoiceDriver.performance ? ` (P: ${currentChoiceDriver.performance})` : '';
+                            const teamTag = currentChoiceDriver.team === "Free Agent" ? "FA" : currentChoiceDriver.team;
+                            options += `<option value="${currentChoiceName}" data-driver-perf="${currentChoiceDriver.performance}" selected>
+                                            ${currentChoiceName} ${perfTag} (${teamTag})
+                                        </option>`;
+                        }
+                    }
+
+                    allAvailableDrivers.forEach(d => {
+                        if (d.name !== driverToReplace.name && d.name !== currentChoiceName && d.name !== otherSlotChoice && d.contractDuration === 0) {
+                            const perfTag = d.performance ? ` (P: ${d.performance})` : '';
+                            const teamTag = d.team === "Free Agent" ? "FA" : d.team;
+                            const faYearsInfo = d.team === "Free Agent" && d.faYears > 0 ? dict.faYearsInfo(d.faYears) : '';
+                            options += `<option value="${d.name}" data-driver-perf="${d.performance}">
+                                            ${d.name} ${perfTag} (${teamTag})${faYearsInfo}
+                                        </option>`;
+                        }
+                    });
+                    return options;
+                };
+                
+                const contractInfoText = driver1.contractDuration > 0 ? `${driver1.contractDuration} ${currentLanguage === 'VI' ? 'năm' : 'years'}` : (currentLanguage === 'VI' ? 'Hết HĐ' : 'Expired');
+                const contractInfoText2 = driver2.contractDuration > 0 ? `${driver2.contractDuration} ${currentLanguage === 'VI' ? 'năm' : 'years'}` : (currentLanguage === 'VI' ? 'Hết HĐ' : 'Expired');
+                const openContractText = currentLanguage === 'VI' ? 'Hết HĐ' : 'Expired';
+
+
+                tableHTML += `
+                    <tr>
+                        <td>${teamName}</td>
+                        <td>${driver1.name} <span class="driver-performance">${driver1.name !== "OPEN CONTRACT" ? `(P: ${driver1.performance})` : ''}</span><br><span class="contract-info">${driver1.contractDuration > 0 ? contractInfoText : openContractText}</span></td>
+                        <td>
+                            <select id="${id1}" data-old-driver="${driver1.name}" ${driver1.contractDuration > 0 ? 'disabled' : ''}>
+                                ${createSelectOptions(driver1, randomChoice1, randomChoice2)}
+                            </select>
+                        </td>
+                        <td>${driver2.name} <span class="driver-performance">${driver2.name !== "OPEN CONTRACT" ? `(P: ${driver2.performance})` : ''}</span><br><span class="contract-info">${driver2.contractDuration > 0 ? contractInfoText2 : openContractText}</span></td>
+                        <td>
+                            <select id="${id2}" data-old-driver="${driver2.name}" ${driver2.contractDuration > 0 ? 'disabled' : ''}>
+                                ${createSelectOptions(driver2, randomChoice2, randomChoice1)}
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            transferTable.innerHTML = tableHTML + '</tbody>';
+            
+            randomChoices.forEach(s => {
+                const selectElement = document.getElementById(s.id);
+                if (selectElement && s.choice) {
+                    selectElement.value = s.choice;
+                }
+            });
+        }
+
+
+        function randomizeTransfers() {
+            const teams = getUniqueTeams();
+            let selectedDrivers = []; 
+            let randomChoices = []; 
+            const dict = DICTIONARY[currentLanguage];
+
+            let candidateDrivers = drivers.filter(d => d.contractDuration === 0 || d.team === "Free Agent").map(d => d.name); 
+            
+            drivers.filter(d => d.contractDuration > 0 && d.team !== "Free Agent").forEach(d => {
+                selectedDrivers.push(d.name);
+                
+                teams.forEach(teamName => {
+                    if (d.team === teamName) {
+                        const teamDriversWithContract = drivers.filter(dr => dr.team === teamName && dr.contractDuration > 0).sort((a, b) => b.performance - a.performance);
+                        
+                        let slotIndex = -1;
+                        if (teamDriversWithContract.length >= 1) {
+                            if (teamDriversWithContract[0].name === d.name) {
+                                slotIndex = 1;
+                            } else if (teamDriversWithContract.length === 2 && teamDriversWithContract[1].name === d.name) {
+                                slotIndex = 2;
+                            }
+                        }
+
+                        if (slotIndex !== -1) {
+                            const id = `transfer-${teamName.replace(/\s/g, '')}-${slotIndex}`;
+                            if (!randomChoices.some(c => c.id === id)) {
+                                randomChoices.push({ id: id, choice: d.name });
+                            }
+                        }
+                    }
+                });
+            });
+
+
+            teams.forEach(teamName => {
+                const slots = [1, 2].map(i => {
+                    const id = `transfer-${teamName.replace(/\s/g, '')}-${i}`;
+                    const select = document.getElementById(id);
+                    const oldDriver = select ? select.dataset.oldDriver : "UNKNOWN";
+                    const hasContract = select ? select.disabled : false;
+                    
+                    const existingChoice = randomChoices.find(c => c.id === id)?.choice;
+                    
+                    return { id, oldDriver, hasContract, existingChoice };
+                });
+                
+                let currentSlotSelections = []; 
+                
+                slots.forEach(slot => {
+                    if (slot.hasContract && slot.existingChoice) {
+                        currentSlotSelections.push(slot.existingChoice);
+                    }
+                });
+
+
+                slots.forEach(slot => {
+                    if (slot.hasContract) {
+                         return;
+                    }
+                    
+                    const otherSlot = slots.find(s => s.id !== slot.id);
+                    const otherSlotChoice = currentSlotSelections.find(c => c !== slot.oldDriver);
+
+                    
+                    let choice = null;
+                    const remainingCandidates = candidateDrivers.filter(name => !selectedDrivers.includes(name) && name !== otherSlotChoice);
+                    
+                    if (slot.oldDriver !== "OPEN CONTRACT" && Math.random() < 0.6 && remainingCandidates.includes(slot.oldDriver)) {
+                        choice = slot.oldDriver;
+                    } 
+                    
+                    if (!choice && remainingCandidates.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * remainingCandidates.length);
+                        choice = remainingCandidates[randomIndex];
+                    } 
+                    
+                    if (!choice) {
+                        if (slot.oldDriver !== "OPEN CONTRACT" && remainingCandidates.includes(slot.oldDriver)) {
+                             choice = slot.oldDriver;
+                        } 
+                        else if (slot.oldDriver === "OPEN CONTRACT" && remainingCandidates.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * remainingCandidates.length);
+                            choice = remainingCandidates[randomIndex];
+                        }
+                    }
+
+                    if (choice) {
+                        if (!selectedDrivers.includes(choice)) {
+                            selectedDrivers.push(choice);
+                        }
+                        currentSlotSelections.push(choice);
+                        randomChoices.push({ id: slot.id, choice: choice });
+                    } else if (slot.oldDriver === "OPEN CONTRACT" && !choice) {
+                         randomChoices.push({ id: slot.id, choice: "" }); 
+                    }
+                });
+            });
+
+            renderTransferTable(randomChoices);
+            alert(dict.alertRandomizeComplete);
+        }
+
+
+        function applyTransfers() {
+            const dict = DICTIONARY[currentLanguage];
+            const isConfirmed = confirm(dict.alertTransferConfirm);
+            if (!isConfirmed) {
+                return;
+            }
+
+            const teams = getUniqueTeams();
+            let faHired = [];
+            
+            let driversNextSeason = drivers.map(d => ({ ...d })); 
+            
+            let newContractsMap = {}; 
+            let teamSlotMap = {}; 
+
+            let hasError = false;
+            teams.forEach(teamName => {
+                for (let i = 1; i <= 2; i++) {
+                    const selectId = `transfer-${teamName.replace(/\s/g, '')}-${i}`;
+                    const selectElement = document.getElementById(selectId);
+                    
+                    if (!selectElement) continue;
+
+                    let driverToSign = null;
+                    let duration = 0;
+                    
+                    if (selectElement.disabled) {
+                        driverToSign = selectElement.value;
+                        const driverObj = driversNextSeason.find(d => d.name === driverToSign);
+                        if(driverObj) {
+                            duration = driverObj.contractDuration; 
+                        }
+                    } else if (selectElement.value !== "") {
+                        driverToSign = selectElement.value;
+                        const driverObj = driversNextSeason.find(d => d.name === driverToSign);
+                        
+                        // Hợp đồng 3 năm cho Perf cao, 1 năm cho Perf thấp hơn
+                        duration = driverObj.performance >= 0.90 ? 3 : 1; 
+                        
+                        if (driverObj && driverObj.team === "Free Agent") {
+                            faHired.push(driverToSign);
+                        }
+                    }
+
+                    if (driverToSign) {
+                        if (newContractsMap[driverToSign] && newContractsMap[driverToSign].team !== teamName) {
+                            alert(dict.transferErrorSlot(driverToSign, newContractsMap[driverToSign].team));
+                            hasError = true;
+                            return; 
+                        } else if (teamSlotMap[`${teamName}-${i}`] && teamSlotMap[`${teamName}-${i}`] !== driverToSign) {
+                            console.error(`Lỗi: Slot ${teamName}-${i} bị trùng.`);
+                        } else {
+                            newContractsMap[driverToSign] = { team: teamName, duration: duration };
+                            teamSlotMap[`${teamName}-${i}`] = driverToSign;
+                        }
+                    }
+                }
+                if (hasError) return;
+            });
+            
+            if (hasError) {
+                return;
+            }
+
+            driversNextSeason.forEach(d => {
+                const contract = newContractsMap[d.name];
+                
+                if (contract) {
+                    d.team = contract.team;
+                    d.contractDuration = contract.duration;
+                    d.contractLength = contract.duration;
+                    d.faYears = 0;
+                } else if (d.team !== "Free Agent") {
+                    d.team = "Free Agent";
+                    d.contractDuration = 0;
+                    d.contractLength = 0;
+                    d.faYears = 0; 
+                }
+            });
+
+            drivers = driversNextSeason.filter(d => d.team !== "PENDING_FA");
+            
+            const driversOnGrid = drivers.filter(d => d.team !== "Free Agent").length;
+            if (driversOnGrid < 20) {
+                 addNews(currentLanguage === 'VI' ? `🚨 **CẢNH BÁO:** Chỉ có ${driversOnGrid} tay đua trên grid cho mùa giải mới. Có thể có đội trống!` : `🚨 **WARNING:** Only ${driversOnGrid} drivers on the grid for the new season. There might be empty teams!`, true);
+            }
+
+            updateTransferNews([], [], faHired, drivers.filter(d => d.contractDuration === 3 && d.performance >= 0.90 && faHired.includes(d.name)));
+
+            startNewSeason(true);
+        }
+        
+        function startNewSeason(showTransferMessage) {
+            currentSeason++;
+            currentRaceIndex = 0;
+            seasonRaceHistory = []; 
+            const dict = DICTIONARY[currentLanguage];
+
+
+            drivers.forEach(d => {
+                d.age = (d.age || 25) + 1;
+                d.experience = (d.experience || 1) + 1;
+                
+                let performanceIncrease = 0;
+                if (d.age < 28) { 
+                    performanceIncrease = Math.random() * 0.008 + 0.002;
+                } else if (d.age < 35) { 
+                    performanceIncrease = Math.random() * 0.003 - 0.001;
+                } else { 
+                    performanceIncrease = Math.random() * -0.005;
+                }
+                
+                d.performance = parseFloat((d.performance + performanceIncrease).toFixed(3));
+                d.performance = Math.max(0.60, Math.min(1.0, d.performance)); 
+                
+                d.points = 0;
+            });
+
+            document.getElementById('currentSeasonDisplay').textContent = currentSeason;
+            document.getElementById('runRaceButton').style.display = 'inline-block';
+            document.getElementById('mainControls').style.display = 'block';
+            document.getElementById('raceResult').style.display = 'block';
+            document.getElementById('transferWindow').style.display = 'none';
+
+            const raceResultDiv = document.getElementById('raceResult');
+            raceResultDiv.innerHTML = `
+                <h2 data-i18n="raceResultTitle">${dict.raceResultTitle} <span id="currentRaceName">${currentLanguage === 'VI' ? 'Mùa Giải Mới' : 'New Season'} ${currentSeason} ${currentLanguage === 'VI' ? 'Đã Bắt Đầu' : 'Started'}</span></h2>
+                <pre id="raceLog"></pre>
+            `;
+            if (showTransferMessage) {
+                raceResultDiv.querySelector('#raceLog').textContent = currentLanguage === 'VI' ? 'Đội hình mùa giải đã được cập nhật sau giai đoạn chuyển nhượng.' : 'The season lineup has been updated after the transfer window.';
+            }
+
+            updateStandings();
+            addNews(currentLanguage === 'VI' ? `Mùa giải ${currentSeason} chính thức khởi động! Ai sẽ là nhà vô địch mới?` : `Season ${currentSeason} officially kicks off! Who will be the new champion?`);
+        }
+
+
+        // ################## HÀM HỖ TRỢ VÀ UI ##################
+
+        function convertToHTMLTable(markdown) {
+            const lines = markdown.trim().split('\n');
+            let html = '<table>';
+            
+            const header = lines[0].split('|').map(s => s.trim()).filter(s => s);
+            html += '<thead><tr>';
+            header.forEach(h => html += `<th>${h}</th>`);
+            html += '</tr></thead><tbody>';
+
+            for (let i = 2; i < lines.length; i++) {
+                const rowData = lines[i].split('|').map(s => s.trim()).filter(s => s);
+                html += '<tr>';
+                rowData.forEach(d => {
+                    if (rowData.indexOf(d) === rowData.length - 1) { 
+                        html += `<td>${d}</td>`;
+                    } else {
+                        html += `<td>${d.replace(/<[^>]*>?/gm, '')}</td>`; 
+                    }
+                });
+                html += '</tr>';
+            }
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+
+        function updateStandings() {
+            const currentDrivers = drivers.filter(d => d.team !== "Free Agent");
+            currentDrivers.sort((a, b) => b.points - a.points);
+            const dict = DICTIONARY[currentLanguage];
+
+            // Cập nhật Header
+            document.querySelector('#driverStandings thead tr th:nth-child(1)').textContent = dict.standingsRank;
+            document.querySelector('#driverStandings thead tr th:nth-child(2)').textContent = dict.standingsDriver;
+            document.querySelector('#driverStandings thead tr th:nth-child(3)').textContent = dict.standingsTeam;
+            document.querySelector('#driverStandings thead tr th:nth-child(4)').textContent = dict.standingsPoints;
+            document.querySelector('#driverStandings thead tr th:nth-child(5)').textContent = dict.standingsContract;
+
+            const tableBody = document.getElementById('driverStandings').querySelector('tbody');
+            tableBody.innerHTML = ''; 
+
+            currentDrivers.forEach((driver, index) => {
+                const row = tableBody.insertRow();
+                row.insertCell().textContent = index + 1; 
+                row.insertCell().textContent = driver.name;
+                row.insertCell().textContent = driver.team;
+                row.insertCell().textContent = driver.points;
+                row.insertCell().textContent = `${driver.contractDuration || 0} ${currentLanguage === 'VI' ? 'năm' : 'years'}`;
+            });
+        }
+        
+        function toggleRaceHistory() {
+            const historyDiv = document.getElementById('seasonHistory');
+            if (historyDiv.style.display === 'none') {
+                displayRaceHistory();
+                historyDiv.style.display = 'block';
+            } else {
+                historyDiv.style.display = 'none';
+            }
+        }
+
+        function displayRaceHistory() {
+            const historyDiv = document.getElementById('seasonHistory');
+            const dict = DICTIONARY[currentLanguage];
+            historyDiv.innerHTML = `<h2 data-i18n="historyTitle">${dict.historyTitle} ${currentLanguage === 'VI' ? 'Mùa' : 'Season'} ${currentSeason}</h2>`; 
+
+            if (seasonRaceHistory.length === 0) {
+                historyDiv.innerHTML += `<p>${currentLanguage === 'VI' ? 'Chưa có chặng đua nào được hoàn thành.' : 'No races have been completed yet.'}</p>`;
+                return;
+            }
+            
+            const tableHeaderPos = currentLanguage === 'VI' ? 'Vị trí' : 'Pos';
+            const tableHeaderDriver = currentLanguage === 'VI' ? 'Tay Đua' : 'Driver';
+            const tableHeaderTeam = currentLanguage === 'VI' ? 'Đội' : 'Team';
+            const tableHeaderPoints = currentLanguage === 'VI' ? 'Điểm' : 'Points';
+            const tableHeaderNote = currentLanguage === 'VI' ? 'Ghi chú' : 'Note';
+
+            seasonRaceHistory.forEach(race => {
+                let raceHtml = `<h3>${race.raceName}</h3>`;
+                let resultTable = `| ${tableHeaderPos} | ${tableHeaderDriver} | ${tableHeaderTeam} | ${tableHeaderPoints} | ${tableHeaderNote} |\n|---|---|---|---|---|\n`;
+
+                race.results.forEach((r) => {
+                    const fastestLapMarker = r.isFastestLap ? '<span class="fastest-lap">🔥 FL</span>' : '';
+                    resultTable += `| ${r.position} | ${r.name} | ${r.team} | ${r.points} | ${fastestLapMarker} |\n`;
+                });
+                
+                raceHtml += convertToHTMLTable(resultTable);
+                historyDiv.innerHTML += raceHtml;
+            });
+        }
+
+
+        function resetSeason() {
+            const dict = DICTIONARY[currentLanguage];
+            const isConfirmed = confirm(dict.alertResetConfirm);
+            
+            if (!isConfirmed) {
+                return;
+            }
+            
+            currentSeason = 2025;
+            currentRaceIndex = 0;
+            seasonRaceHistory = [];
+            championshipHistory = [];
+            
+            drivers = initializeDrivers(); 
+            USED_ROOKIE_NAMES = []; 
+            AVAILABLE_ROOKIE_NAMES = [
+                "Zane Maloney", "Theo Pourchaire", "Paul Aron", "Kush Maini", "Jak Crawford", "Taylor Barnard", 
+                "Luke Browning", "Felipe Drugovich", "Dennis Hauger", "Robert Shwartzman", "Ayumu Iwasa", 
+                "Victor Martins", "Caio Collet", "Zhuo Zhou", "Hadrien David", "Jamie Chadwick", 
+                "Marcus Armstrong", "Arthur Leclerc", "Mick Schumacher", "Callum Ilott"
+            ];
+            
+            document.getElementById('currentSeasonDisplay').textContent = currentSeason;
+            document.getElementById('runRaceButton').style.display = 'inline-block';
+            document.getElementById('mainControls').style.display = 'block';
+            document.getElementById('raceResult').style.display = 'block';
+            document.getElementById('transferWindow').style.display = 'none';
+            document.getElementById('championshipHistory').style.display = 'none';
+
+            const raceResultDiv = document.getElementById('raceResult');
+            raceResultDiv.innerHTML = `
+                <h2 data-i18n="raceResultTitle">${dict.raceResultTitle} <span id="currentRaceName">${currentLanguage === 'VI' ? 'Mùa Giải' : 'Season'} ${currentSeason} ${currentLanguage === 'VI' ? 'Đã Bắt Đầu' : 'Started'}</span></h2>
+                <pre id="raceLog">${dict.raceLogInitial}</pre>
+            `;
+            
+            document.getElementById('seasonHistory').innerHTML = `<h2 data-i18n="historyTitle">${dict.historyTitle}</h2>`;
+            document.getElementById('seasonHistory').style.display = 'none'; 
+            
+            document.getElementById('newsList').innerHTML = `<li>📰 ${dict.newsInitial}</li>`;
+            
+            updateStandings(); 
+            alert(dict.alertResetComplete);
+        }
+
+    </script>
+</body>
+</html>
