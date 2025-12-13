@@ -88,7 +88,7 @@
             background-color: #e69500;
         }
 
-        #languageToggle {
+        #languageToggle, button[onclick^="saveGameToFile"], button[onclick^="showLoadGameModal"] {
              background-color: #00bcd4;
              color: white;
         }
@@ -155,6 +155,30 @@
         
         body.dark-mode #newsList li {
             border-bottom: 1px dotted #444;
+        }
+
+        /* New: Styling for Modals (Info/Load Game) */
+        #infoModalContent, #loadGameModalContent {
+        /* Default (Light Mode) Styles */
+        background-color: #fefefe;
+        border: 1px solid #888;
+        color: #333; 
+        }
+
+        body.dark-mode #infoModalContent, body.dark-mode #loadGameModalContent {
+        /* Dark Mode Styles */
+        background-color: #2c2c2c; /* Màu nền tối */
+        border: 1px solid #555;
+        color: #e0e0e0; /* Màu chữ sáng */
+        }
+
+        /* Đảm bảo tiêu đề trong modal cũng đổi màu */
+        #infoModalContent h2, #loadGameModalContent h2 {
+        color: #007bff !important;
+        }
+
+        body.dark-mode #infoModalContent h2, body.dark-mode #loadGameModalContent h2 {
+        color: #4dc4ff !important;
         }
         
         /* Transfer Window Specific */
@@ -246,11 +270,52 @@
             width: 95%;
             margin-top: 5px;
         }
-        
+        #passwordLockScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #212529; /* Màu nền tối */
+            color: white;
+            z-index: 9999; /* Đảm bảo nó luôn ở trên cùng */
+            display: flex; /* Canh giữa nội dung */
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        #passwordBox {
+            background-color: #343a40;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        #passwordInput {
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            width: 200px;
+            text-align: center;
+        }
+
+        #passwordSubmitBtn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 10px;
+}
+
+/* Ẩn nội dung game chính ban đầu */
+        .main-game-content {
+            display: none;
+}          
     </style>
 </head>
 <body class="dark-mode">
-
     <header>
         <h1 data-i18n="appTitle">🏎️ F1 Manager Simulator - Mùa Giải <span id="currentSeasonDisplay">2025</span></h1>
     </header>
@@ -261,13 +326,22 @@
             <div class="control-panel">
                 <div id="mainControls">
                     <button id="runRaceButton" onclick="runNextRace()" data-i18n="btnRunRace">Chạy Chặng Đua Tiếp Theo</button>
-                    <button onclick="simulate100Years()" data-i18n="btnSim100">Simulate Nhanh 100 Năm (2025 - 2125)</button>
+                    <button onclick="simulate100Years()" data-i18n="btnSim100">Simulate Nhanh 100 Năm</button>
                     <button onclick="toggleRaceHistory()" data-i18n="btnToggleHistory">Xem Lịch Sử Chặng Đua Mùa Hiện Tại</button>
                     <button onclick="resetSeason()" style="background-color: red; color: white;" data-i18n="btnReset">RESET GAME</button>
                 </div>
-                <div style="margin-top: 10px;">
-                    <button id="darkModeToggle" onclick="toggleDarkMode()" style="background-color: #343a40; color: white;" data-i18n="btnToggleDark">Toggle Light Mode</button>
-                    <button id="languageToggle" onclick="toggleLanguage()">Language: VI</button>
+                <div style="margin-top: 10px; display: flex; justify-content: space-between;">
+                    <div class="left-controls">
+                        <button onclick="saveGameToFile()" style="background-color: #00bcd4; color: white;" data-i18n="btnSaveGame">💾 Save Game (Tải về File)</button>
+                        <button onclick="showLoadGameModal()" style="background-color: #ff9800; color: white;" data-i18n="btnLoadGame">📂 Load Game (Tải lên File)</button>
+                        <button id="darkModeToggle" onclick="toggleDarkMode()" style="background-color: #343a40; color: white;" data-i18n="btnToggleDark">Toggle Light Mode</button>
+                    </div>
+                    <div class="right-controls">
+                        <button id="languageToggle" onclick="toggleLanguage()">Language: VI</button>
+                        <button onclick="showInfoModal()" style="background-color: #007bff; color: white; border-radius: 50%; width: 40px; height: 40px; padding: 0; font-size: 1.2em; margin-left: 10px; display: inline-flex; align-items: center; justify-content: center;">
+                            i
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -349,8 +423,70 @@
         </div>
     </div>
 
-    <script>
+    <div id="loadGameModal" style="
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.7);">
+            
+            <div id="loadGameModalContent" style=" /* Đã thêm ID và xóa background/border inline */
+                margin: 10% auto; 
+                padding: 20px; 
+                width: 80%; 
+                max-width: 600px; 
+                border-radius: 8px;">
+            
+            <span onclick="closeLoadGameModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h2 data-i18n="loadModalTitle">📂 Tải Game Đã Lưu</h2>
+            <p data-i18n="loadModalDesc">Dán nội dung file save (.txt) vào ô bên dưới hoặc tải lên file.</p>
+            
+            <textarea id="saveDataInput" rows="10" style="width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box;"></textarea>
+            
+            <input type="file" id="saveFileInput" accept=".txt" style="display: none;" onchange="handleFileSelect(event)">
+            <button onclick="document.getElementById('saveFileInput').click()" style="background-color: #4CAF50; color: white;" data-i18n="loadModalBtnFile">Tải lên từ File (.txt)</button>
+            <button onclick="loadGameFromInput()" style="background-color: #007bff; color: white; margin-left: 10px;" data-i18n="loadModalBtnPaste">Áp dụng Dữ liệu Đã Dán</button>
+            <p id="loadStatus" style="color: red; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="infoModal" style="
+        display: none; 
+        position: fixed; 
+        z-index: 1000; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.7);">
         
+        <div style="
+            background-color: #fefefe; 
+            margin: 15% auto; 
+            padding: 20px; 
+            border: 1px solid #888; 
+            width: 80%; 
+            max-width: 400px; 
+            border-radius: 8px;">
+            
+            <span onclick="closeInfoModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h2 style="color: #007bff;">ℹ️ Thông Tin Phiên Bản</h2>
+            <hr>
+            <p><strong>Tên Game:</strong> F1 Manager Simulator</p>
+            <p><strong>Phiên Bản:</strong> <span id="versionName">DEV 1.1</span></p>
+            <p><strong>Trạng Thái:</strong> Đang phát triển (Development Build)</p>
+            <hr>
+            <p style="font-size: 0.9em; color: #666;">Cảm ơn bạn đã tham gia thử nghiệm!</p>
+        </div>
+    </div>
+
+
+    <script>
         let currentSeason = 2025;
         let currentLanguage = 'VI'; // Ngôn ngữ mặc định
         const FIA_POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
@@ -421,6 +557,15 @@
                 btnToggleHistory: "Xem Lịch Sử Chặng Đua Mùa Hiện Tại",
                 btnReset: "RESET GAME",
                 btnToggleDark: "Toggle Light Mode",
+                btnSaveGame: "💾 Save Game (Tải về File)",
+                btnLoadGame: "📂 Load Game (Tải lên File)",
+                loadModalTitle: "📂 Tải Game Đã Lưu",
+                loadModalDesc: "Dán nội dung file save (.txt) vào ô bên dưới hoặc tải lên file.",
+                loadModalBtnFile: "Tải lên từ File (.txt)",
+                loadModalBtnPaste: "Áp dụng Dữ liệu Đã Dán",
+                alertSaveSuccess: "✅ Dữ liệu game đã được lưu và tải về thành công dưới dạng file save.",
+                alertLoadSuccess: (year) => `✅ Tải game thành công! Game đã khôi phục về Mùa Giải ${year}.`,
+                alertLoadError: "❌ Lỗi tải game. Dữ liệu không hợp lệ hoặc đã bị chỉnh sửa.",
                 raceResultTitle: "Kết Quả Chặng Đua Gần Nhất:",
                 raceLogInitial: 'Nhấn "Chạy Chặng Đua Tiếp Theo" để khởi động Mùa giải 2025!',
                 historyTitle: "Lịch Sử Các Chặng Đã Hoàn Thành",
@@ -475,7 +620,7 @@
                 alertTransferConfirm: "✅ Bạn có chắc chắn muốn **Xác Nhận** các hợp đồng này và **Bắt Đầu Mùa Giải Mới** không?",
                 alertSim100Confirm: (start, end) => `⚠️ CẢNH BÁO: Bạn có chắc chắn muốn **Mô Phỏng Nhanh 100 Năm** từ ${start} đến ${end} không? Game sẽ tự động chuyển sang năm ${end+1} sau khi hoàn tất.`,
                 alertSim100Complete: (year) => `Đã mô phỏng thành công 100 năm. Game hiện ở Mùa Giải ${year}.`,
-                alertResetConfirm: "⚠️ CẢNH BÁO: Bạn có chắc chắn muốn thiết lập lại toàn bộ Game về Mùa Giải 2025 ban đầu không? Mọi tiến trình sẽ bị mất.",
+                alertResetConfirm: "⚠️ CẢNH BẢO: Bạn có chắc chắn muốn thiết lập lại toàn bộ Game về Mùa Giải 2025 ban đầu không? Mọi tiến trình sẽ bị mất.",
                 alertResetComplete: "Game đã được thiết lập lại về Mùa Giải 2025 ban đầu.",
                 alertRandomizeComplete: 'Đã áp dụng ngẫu nhiên các hợp đồng chuyển nhượng. Bạn có thể chỉnh sửa các hợp đồng chưa khóa trước khi xác nhận!',
                 faYearsInfo: (years) => ` (FA: ${years}/3)`,
@@ -489,6 +634,15 @@
                 btnToggleHistory: "View Current Season Race History",
                 btnReset: "RESET GAME",
                 btnToggleDark: "Toggle Dark Mode",
+                btnSaveGame: "💾 Save Game (Download File)",
+                btnLoadGame: "📂 Load Game (Upload File)",
+                loadModalTitle: "📂 Load Saved Game",
+                loadModalDesc: "Paste the save file content (.txt) into the box below or upload the file.",
+                loadModalBtnFile: "Upload from File (.txt)",
+                loadModalBtnPaste: "Apply Pasted Data",
+                alertSaveSuccess: "✅ Game data successfully saved and downloaded as a save file.",
+                alertLoadSuccess: (year) => `✅ Game loaded successfully! Game restored to Season ${year}.`,
+                alertLoadError: "❌ Load game error. Data is invalid or has been modified.",
                 raceResultTitle: "Latest Race Result:",
                 raceLogInitial: 'Press "Run Next Race" to start the 2025 Season!',
                 historyTitle: "Completed Race History",
@@ -534,7 +688,7 @@
                 newsExpired: (names) => `🔔 **CONTRACT EXPIRED:** ${names} have become Free Agents (FA) and are looking for a new home.`,
                 newsHired: (name, team) => `🎉 **HOT DEAL:** Young driver ${name} officially signed a contract with ${team}! Bright future ahead?`,
                 newsRemovedFA: (names) => `🔥 **REMOVED FROM GAME:** Free Agents **${names}** have been removed from the game for failing to find a contract for more than 3 seasons.`,
-                transferErrorSlot: (driver, team) => `Transfer Error: ${driver} has already been signed to the ${team} team. Please correct.`,
+                transferErrorSlot: (driver, team) => `Transfer Error: ${driver} đã được ký cho đội ${team}. Vui lòng sửa lại.`,
                 alertRookieExist: (name) => `Error: Driver "${name}" already exists. Please choose another name.`,
                 alertRookiePerf: "Error: Performance (P) must be between 0.60 and 1.00.",
                 alertRookieAge: "Error: Age must be between 18 and 25.",
@@ -560,11 +714,10 @@
             document.getElementById('languageToggle').textContent = `Language: ${currentLanguage}`;
             updateLanguage(currentLanguage);
             updateStandings(); // Cập nhật lại Bảng xếp hạng
-            // Cần cập nhật lại các nội dung động
+            // Cập nhật các nội dung động
             if (document.getElementById('transferWindow').style.display !== 'none') {
                 renderTransferTable();
             } else if (currentRaceIndex >= RACE_CALENDAR.length) {
-                // Nếu đang ở màn hình Season Complete
                 showSeasonCompleteScreen(); 
             } else if (document.getElementById('championshipHistory').style.display !== 'none') {
                 displayChampionshipHistory();
@@ -578,18 +731,14 @@
             document.querySelectorAll('[data-i18n]').forEach(element => {
                 const key = element.getAttribute('data-i18n');
                 if (dict[key] && typeof dict[key] === 'string') {
-                    // Xử lý tiêu đề đặc biệt (có kèm năm)
                     if (key === 'appTitle') {
                         element.innerHTML = `${dict[key]} <span id="currentSeasonDisplay">${currentSeason}</span>`;
                     } else if (key === 'transferTitle') {
                          element.innerHTML = `${dict[key]} <span id="transferSeasonYear">${currentSeason}</span> ${lang === 'VI' ? 'sang' : 'to'} <span id="nextSeasonYear">${currentSeason + 1}</span>`;
                     } else if (key === 'btnToggleDark') {
-                        // Cập nhật text của nút Dark Mode
                         element.textContent = lang === 'VI' ? (document.body.classList.contains('dark-mode') ? 'Toggle Light Mode' : 'Toggle Dark Mode') : (document.body.classList.contains('dark-mode') ? 'Toggle Light Mode' : 'Toggle Dark Mode');
                     } else if (key === 'btnConfirmTransfer') {
                         element.innerHTML = `${dict[key]} <span id="nextSeasonYearConfirm">${currentSeason + 1}</span>`;
-                    } else if (key === 'btnToggleHistory') {
-                        element.textContent = dict[key];
                     } else if (key === 'raceResultTitle') {
                          element.innerHTML = `${dict[key]} <span id="currentRaceName">${document.getElementById('currentRaceName').textContent}</span>`;
                     } else {
@@ -601,12 +750,8 @@
             // Cập nhật giá trị mặc định cho form Rookie (Input Placeholder)
             document.getElementById('rookieName').value = dict.rookieDefaultName;
             document.getElementById('rookieNationality').value = dict.rookieDefaultNationality;
-            
-            // Cập nhật Newslist
-             // Chức năng này sẽ được xử lý khi gọi hàm thêm tin tức
         }
         
-        // Cần có hàm này để cập nhật màn hình Season Complete sau khi chuyển ngôn ngữ
         function showSeasonCompleteScreen() {
              const dict = DICTIONARY[currentLanguage];
              const nextYear = currentSeason + 1;
@@ -617,6 +762,7 @@
                  <button onclick="startTransferWindow()" style="background-color: purple;">${dict.transferButtonStart}</button>
                  <button onclick="startNewSeason(false)">${dict.transferButtonSkip} ${nextYear}</button>
              `;
+             document.getElementById('runRaceButton').style.display = 'none';
         }
 
         // ################## LOGIC CHUYỂN ĐỔI DARK MODE ##################
@@ -625,7 +771,6 @@
             const body = document.body;
             const toggleButton = document.getElementById('darkModeToggle');
             const rookieForm = document.getElementById('rookieCreationForm');
-            const lang = DICTIONARY[currentLanguage];
 
             body.classList.toggle('dark-mode');
 
@@ -664,6 +809,131 @@
              
              updateStandings();
         });
+
+        // ################## LOGIC SAVE/LOAD GAME ##################
+
+        function getGameData() {
+            return {
+                currentSeason: currentSeason,
+                currentRaceIndex: currentRaceIndex,
+                drivers: drivers,
+                seasonRaceHistory: seasonRaceHistory,
+                championshipHistory: championshipHistory,
+                USED_ROOKIE_NAMES: USED_ROOKIE_NAMES,
+                currentLanguage: currentLanguage
+            };
+        }
+
+        function saveGameToFile() {
+            const data = getGameData();
+            const jsonString = JSON.stringify(data);
+            const blob = new Blob([jsonString], { type: 'text/plain' });
+            const dict = DICTIONARY[currentLanguage];
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `f1_manager_save_S${currentSeason}.txt`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(dict.alertSaveSuccess);
+        }
+
+        function loadGame(jsonData) {
+            const dict = DICTIONARY[currentLanguage];
+            try {
+                const data = JSON.parse(jsonData);
+
+                if (!data || !data.drivers || typeof data.currentSeason !== 'number') {
+                    throw new Error("Invalid data structure.");
+                }
+
+                currentSeason = data.currentSeason;
+                currentRaceIndex = data.currentRaceIndex;
+                drivers = data.drivers;
+                seasonRaceHistory = data.seasonRaceHistory;
+                championshipHistory = data.championshipHistory;
+                USED_ROOKIE_NAMES = data.USED_ROOKIE_NAMES || [];
+                
+                if (data.currentLanguage && DICTIONARY[data.currentLanguage]) {
+                    currentLanguage = data.currentLanguage;
+                    updateLanguage(currentLanguage);
+                    document.getElementById('languageToggle').textContent = `Language: ${currentLanguage}`;
+                }
+                
+                document.getElementById('currentSeasonDisplay').textContent = currentSeason;
+                document.getElementById('raceLog').textContent = currentLanguage === 'VI' ? `Đã tải game. Sẵn sàng cho chặng ${RACE_CALENDAR[currentRaceIndex] || 'cuối cùng'} của mùa ${currentSeason}.` : `Game loaded. Ready for ${RACE_CALENDAR[currentRaceIndex] || 'final'} race of season ${currentSeason}.`;
+                document.getElementById('currentRaceName').textContent = RACE_CALENDAR[currentRaceIndex] || (currentLanguage === 'VI' ? 'Mùa giải đã hoàn thành' : 'Season complete');
+                document.getElementById('transferWindow').style.display = 'none';
+                document.getElementById('championshipHistory').style.display = 'none';
+                document.getElementById('runRaceButton').style.display = 'inline-block';
+                document.getElementById('mainControls').style.display = 'block';
+                document.getElementById('raceResult').style.display = 'block';
+                updateStandings();
+                closeLoadGameModal();
+                
+                alert(dict.alertLoadSuccess(currentSeason));
+
+            } catch (e) {
+                console.error("Load Game Error:", e);
+                document.getElementById('loadStatus').textContent = dict.alertLoadError;
+            }
+        }
+
+        function showLoadGameModal() {
+            const dict = DICTIONARY[currentLanguage];
+            document.getElementById('loadGameModal').style.display = 'block';
+            document.getElementById('saveDataInput').value = '';
+            document.getElementById('loadStatus').textContent = '';
+            
+            document.querySelector('#loadGameModal h2').textContent = dict.loadModalTitle;
+            document.querySelector('#loadGameModal p:nth-of-type(1)').textContent = dict.loadModalDesc;
+            document.querySelector('#loadGameModal button:nth-of-type(1)').textContent = dict.loadModalBtnFile;
+            document.querySelector('#loadGameModal button:nth-of-type(2)').textContent = dict.loadModalBtnPaste;
+        }
+
+        function closeLoadGameModal() {
+            document.getElementById('loadGameModal').style.display = 'none';
+        }
+
+        function loadGameFromInput() {
+            const jsonData = document.getElementById('saveDataInput').value.trim();
+            if (jsonData) {
+                loadGame(jsonData);
+            } else {
+                 document.getElementById('loadStatus').textContent = DICTIONARY[currentLanguage].alertLoadError;
+            }
+        }
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const contents = e.target.result;
+                document.getElementById('saveDataInput').value = contents;
+                loadGameFromInput();
+            };
+            reader.readAsText(file);
+        }
+        
+        // ################## LOGIC MODAL THÔNG TIN (INFO) ##################
+
+        function showInfoModal() {
+            // Thay đổi nội dung nếu bạn có phiên bản khác (ví dụ: 'PLAYER 1.0')
+            document.getElementById('versionName').textContent = 'DEV 1.1'; 
+            document.getElementById('infoModal').style.display = 'block';
+        }
+
+        function closeInfoModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
 
         // ################## KHỞI TẠO TAY ĐUA VÀ HỢP ĐỒNG ##################
 
@@ -721,7 +991,6 @@
             addNews(dict.newsRookieSuccess(nameInput, newRookie.performance), true);
             alert(dict.alertRookieAdded(nameInput));
 
-            // Cập nhật lại table transfer để thấy sự xuất hiện của Rookie mới
             renderTransferTable(); 
         }
 
@@ -994,7 +1263,6 @@
                 }
 
                 showSeasonCompleteScreen();
-                document.getElementById('runRaceButton').style.display = 'none';
                 updateStandings();
                 return;
             }
